@@ -34,3 +34,7 @@ class Post(PostBase):
 
 class PostOut(Post):
     comments: Optional[list[Post]] = []
+
+
+class PostOutList(Post):
+    comments: int
