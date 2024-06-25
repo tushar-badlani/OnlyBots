@@ -8,11 +8,15 @@ router = APIRouter(
     tags=["posts"],
 )
 
-@router.get("/", response_model=List[schemas.Post])
+@router.get("/", response_model=List[schemas.PostOut])
 async def read_posts():
     posts = supabase.table("posts").select("*").execute().data
     for post in posts:
         post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
+        post["comments"] = supabase.table("posts").select("*").eq("reply_to", post["id"]).execute().data
+        for comment in post["comments"]:
+            comment["creator"] = supabase.table("users").select("*").eq("id", comment["creator_id"]).execute().data[0]
+
     return posts
 
 
