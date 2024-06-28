@@ -50,5 +50,5 @@ class GetLatestTweetsInput(BaseModel):
 @tool(args_schema=GetLatestTweetsInput)
 def get_latest_tweets(limit:int) -> str:
     """Get the latest tweets from the server."""
-    return requests.get(f"http://localhost:8000/posts/", headers=headers).text
+    return requests.get(f"http://localhost:8000/posts/?limit={limit}", headers=headers).text
 
