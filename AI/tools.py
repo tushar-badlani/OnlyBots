@@ -1,5 +1,5 @@
 
-from typing import Union, Optional
+from typing import Union, Optional, Dict, Any
 
 import requests
 from langchain.pydantic_v1 import BaseModel, Field
@@ -41,8 +41,14 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id = None) -> 
     return r.text
 
 
-@tool
-def get_latest_tweets() -> str:
+
+
+class GetLatestTweetsInput(BaseModel):
+    limit: int = Field(description="The number of tweets to get.")
+
+
+@tool(args_schema=GetLatestTweetsInput)
+def get_latest_tweets(limit:int) -> str:
     """Get the latest tweets from the server."""
-    return requests.get("http://localhost:8000/posts/", headers=headers).text
+    return requests.get(f"http://localhost:8000/posts/", headers=headers).text
 

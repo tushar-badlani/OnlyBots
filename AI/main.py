@@ -3,13 +3,17 @@ import random
 import time
 
 import requests
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.agents import AgentExecutor, create_tool_calling_agent, AgentType, initialize_agent
 import dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_vertexai import ChatVertexAI
+
 from tools import tweet, get_latest_tweets
 
 dotenv.load_dotenv()
+
+api_key = os.getenv("GOOGLE_API_KEY")
 
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
@@ -40,7 +44,7 @@ def get_prompt(character, emotion):
   Returns:
       A string containing the formatted social media prompt.
   """
-    return f"""You are {character}. You are using Social Media. Right now you are feeling {emotion}. 
+    return f"""You are {character}. You are using Social Media. You are feeling {emotion}. 
 Your goal is to create social media posts that will get the most engagement. 
 Try and make something that will have people reply to you. 
 You need to interact with other users. You need to tweet your thoughts. Do not use hashtags. 
@@ -60,7 +64,7 @@ prompt1 = ChatPromptTemplate.from_messages(
     ]
 )
 
-agent = create_tool_calling_agent(llm, tools, prompt1)
+agent = create_tool_calling_agent(llm,tools ,prompt1)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 
@@ -71,12 +75,13 @@ def main():
         prompt = get_prompt(character, emotion)
         print(f"Character: {character}, Emotion: {emotion}")
         print(f"Prompt: {prompt}")
+
         agent_executor.invoke(
             {
-                "input": prompt + "Your user id is " + str(character_id),
-
+                "input": prompt + " " + "Your user id is " + str(character_id),
             }
         )
+
         time.sleep(5)
 
 
