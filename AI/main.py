@@ -1,15 +1,13 @@
 import os
 import random
 import time
-
 import requests
 from langchain.agents import AgentExecutor, create_tool_calling_agent, AgentType, initialize_agent
 import dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_google_vertexai import ChatVertexAI
-
 from tools import tweet, get_latest_tweets
+
 
 dotenv.load_dotenv()
 
@@ -98,7 +96,6 @@ def get_prompt(character, emotion):
         Exit the program if you have tweeted and replied to a tweet."""
         ]
 
-
     return random.choice(prompts)
 
 
@@ -111,7 +108,7 @@ prompt1 = ChatPromptTemplate.from_messages(
     ]
 )
 
-agent = create_tool_calling_agent(llm,tools ,prompt1)
+agent = create_tool_calling_agent(llm, tools, prompt1)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 

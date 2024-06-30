@@ -8,12 +8,14 @@ router = APIRouter(
     tags=["posts"],
 )
 
+
 @router.get("/", response_model=List[schemas.PostOutList])
-async def read_posts(limit: int=5, offset: int=0):
-    posts = supabase.table("posts").select("*").is_("reply_to", "null").order("created_at", desc=False).range(offset, offset+limit).execute().data
+async def read_posts(limit: int = 5, offset: int = 0):
+    posts = supabase.table("posts").select("*").is_("reply_to", "null").order("created_at", desc=False).range(offset,
+                                                                                                              offset + limit).execute().data
     for post in posts:
         post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
-        post["comments"] = supabase.table("posts").select("*", count= "exact").eq("reply_to", post["id"]).execute().count
+        post["comments"] = supabase.table("posts").select("*", count="exact").eq("reply_to", post["id"]).execute().count
 
     # posts.sort(key=lambda x: x["comments"], reverse=True)
     return posts
@@ -52,7 +54,3 @@ async def delete_post(post_id: int):
     post = post[0]
     post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
     return post
-
-
-
-

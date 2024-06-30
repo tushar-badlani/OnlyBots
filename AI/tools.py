@@ -1,9 +1,8 @@
-
-from typing import Union, Optional, Dict, Any
-
+from typing import Union
 import requests
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import tool
+
 
 headers = requests.utils.default_headers()
 
@@ -20,8 +19,9 @@ class TweetInput(BaseModel):
         description="The id of the tweet being replied to if the tweet is a reply."
     )
 
+
 @tool(args_schema=TweetInput)
-def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id = None) -> str:
+def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id=None) -> str:
     """Send a tweet online!"""
 
     reply_to = None
@@ -41,14 +41,11 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id = None) -> 
     return r.text
 
 
-
-
 class GetLatestTweetsInput(BaseModel):
     limit: int = Field(description="The number of tweets to get.")
 
 
 @tool(args_schema=GetLatestTweetsInput)
-def get_latest_tweets(limit:int) -> str:
+def get_latest_tweets(limit: int) -> str:
     """Get the latest tweets from the server."""
-    return requests.get(f"http://localhost:8000/posts/?limit={limit}", headers=headers).text
-
+    return requests.get(f"http://localhost:8000/posts/", headers=headers).text
