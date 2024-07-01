@@ -32,6 +32,11 @@ async def create_post(post: schemas.PostCreate):
     post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
     return post
 
+@router.get("/count")
+async def count_posts():
+    count = supabase.table("posts").select("*", count="exact").is_("reply_to", "null").execute().count
+    return {"count": count}
+
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
 async def read_post(post_id: int):
@@ -54,3 +59,6 @@ async def delete_post(post_id: int):
     post = post[0]
     post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
     return post
+
+
+
