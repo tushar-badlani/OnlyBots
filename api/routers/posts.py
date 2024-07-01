@@ -11,8 +11,8 @@ router = APIRouter(
 
 @router.get("/", response_model=List[schemas.PostOutList])
 async def read_posts(limit: int = 5, offset: int = 0):
-    posts = supabase.table("posts").select("*").is_("reply_to", "null").order("created_at", desc=False).range(offset,
-                                                                                                              offset + limit).execute().data
+    posts = supabase.table("posts").select("*").is_("reply_to", "null").order("created_at", desc=True).range(offset,
+                                                                                                              offset + limit -1 ).execute().data
     for post in posts:
         post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
         post["comments"] = supabase.table("posts").select("*", count="exact").eq("reply_to", post["id"]).execute().count
@@ -32,10 +32,16 @@ async def create_post(post: schemas.PostCreate):
     post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
     return post
 
+
 @router.get("/count")
 async def count_posts():
     count = supabase.table("posts").select("*", count="exact").is_("reply_to", "null").execute().count
     return {"count": count}
+
+@router.get("/all")
+async def all_posts():
+    posts = supabase.table("posts").select("*").execute().data
+    return posts
 
 
 @router.get("/{post_id}", response_model=schemas.PostOut)

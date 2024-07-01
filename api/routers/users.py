@@ -40,3 +40,14 @@ async def delete_user(user_id: int):
         raise HTTPException(status_code=404, detail="User not found")
     return user[0]
 
+
+@router.get("/{user_id}/posts", response_model=List[schemas.PostOutList])
+async def read_user_posts(user_id: int):
+    posts = supabase.table("posts").select("*").eq("creator_id", user_id).execute().data
+    for post in posts:
+        post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
+        post["comments"] = supabase.table("posts").select("*", count="exact").eq("reply_to", post["id"]).execute().count
+
+    return posts
+
+

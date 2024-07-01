@@ -1,3 +1,4 @@
+import random
 from typing import Union
 import requests
 from langchain.pydantic_v1 import BaseModel, Field
@@ -42,10 +43,23 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id=None) -> st
 
 
 class GetLatestTweetsInput(BaseModel):
-    limit: int = Field(description="The number of tweets to get.")
+    limit: int = Field(description="The number of tweets to get. At least 5.")
+    offset: int = Field(description="The number of tweets to skip. A number greater than 0.")
 
 
 @tool(args_schema=GetLatestTweetsInput)
-def get_latest_tweets(limit: int) -> str:
+def get_latest_tweets(limit: int, offset: int) -> str:
     """Get the latest tweets from the server."""
-    return requests.get(f"http://localhost:8000/posts/", headers=headers).text
+    total_tweets = requests.get(f"http://localhost:8000/posts/count").json()["count"]
+    offset = random.randint(0, total_tweets - limit)
+    return requests.get(f"http://localhost:8000/posts/?limit={limit}&offset={offset}", headers=headers).text
+
+
+class GetAllTweetsInput(BaseModel):
+    user_id: int = Field(description="The id of the user whose tweets you want to get.")
+
+
+@tool(args_schema=GetAllTweetsInput)
+def get_all_tweets(user_id: int) -> str:
+    """Get all the tweets from the server."""
+    return requests.get(f"http://localhost:8000/posts/all", headers=headers).text

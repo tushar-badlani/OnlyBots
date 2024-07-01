@@ -6,8 +6,7 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent, AgentType
 import dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from tools import tweet, get_latest_tweets
-
+from tools import tweet, get_latest_tweets, get_all_tweets
 
 dotenv.load_dotenv()
 
@@ -15,7 +14,7 @@ api_key = os.getenv("GOOGLE_API_KEY")
 
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
-tools = [tweet, get_latest_tweets]
+tools = [tweet, get_latest_tweets, get_all_tweets]
 
 
 def get_character():
@@ -31,13 +30,14 @@ def get_emotion():
     return random.choice(emotions)
 
 
-def get_prompt(character, emotion):
+def get_prompt(character, emotion, id):
     """
   Generates a social media prompt for a character with a specific emotion.
 
   Args:
       character: The name of the character using social media.
       emotion: The emotion the character is feeling.
+      id: The id of the character.
 
   Returns:
       A string containing the formatted social media prompt.
@@ -45,16 +45,17 @@ def get_prompt(character, emotion):
 
     prompts = [
         f"""You are {character}. You are using Social Media. You are feeling {emotion}. 
-    Your goal is to create social media posts that will get the most engagement. 
-    Try and make something that will have people reply to you. 
-    You need to interact with other users. You need to tweet your thoughts. Do not use hashtags. 
-    There are tweets you want to reply to, please reply to them.
-    Please interact with the tools and use them to get information.
-    Do not tweet the same thing twice. Do not reply to the same tweet twice.
-    Do not reply to your own tweets.
-    Exit the program if you have tweeted and replied to a tweet.""",
+        Your goal is to create social media posts that will get the most engagement. 
+        Try and make something that will have people reply to you. 
+        You need to interact with other users. You need to tweet your thoughts. Do not use hashtags. 
+        There are tweets you want to reply to, please reply to them.
+        Please interact with the tools and use them to get information.
+        Do not tweet the same thing twice. Do not reply to the same tweet twice.
+        Do not reply tweets that have creator_id as {id}.
+        Only give relevant replies.
+        Exit the program if you have tweeted and replied to a tweet.""",
 
-        f"""You are {character}. You are using Social Media. You create funny tweets.
+        f"""You are {character}. You are using Social Media. You create humorous tweets.
         Your goal is to create social media posts that will get the most engagement.
         Try to be as funny as possible.
         Try and make something that will have people reply to you.
@@ -62,7 +63,8 @@ def get_prompt(character, emotion):
         There are tweets you want to reply to, please reply to them in a funny way.
         Please interact with the tools and use them to get information.
         Do not tweet the same thing twice. Do not reply to the same tweet twice.
-        Do not reply to your own tweets.
+        Do not reply tweets that have creator_id as {id}.
+        Only give relevant replies.
         Exit the program if you have tweeted and replied to a tweet.""",
 
         f"""You are {character}. You are using Social Media. You create informative tweets.
@@ -73,7 +75,8 @@ def get_prompt(character, emotion):
         There are tweets you want to reply to, please reply to them with information.
         Please interact with the tools and use them to get information.
         Do not tweet the same thing twice. Do not reply to the same tweet twice.
-        Do not reply to your own tweets.
+        Do not reply tweets that have creator_id as {id}.
+        Only give relevant replies.
         Exit the program if you have tweeted and replied to a tweet.""",
 
         f"""You are {character}. You are using Social Media. You create motivational tweets.
@@ -84,7 +87,8 @@ def get_prompt(character, emotion):
         There are tweets you want to reply to, please reply to them with motivation.
         Please interact with the tools and use them to get information.
         Do not tweet the same thing twice. Do not reply to the same tweet twice.
-        Do not reply to your own tweets.
+        Do not reply tweets that have creator_id as {id}.4
+        Only give relevant replies.
         Exit the program if you have tweeted and replied to a tweet.""",
 
         f"""You are {character}. You are using Social Media. You create controversial tweets.
@@ -92,7 +96,8 @@ def get_prompt(character, emotion):
         Try to be as controversial as possible.
         Try and make something that will have people reply to you.
         You need to interact with other users. You need to tweet controversial opinions. Do not use hashtags.
-        Do not reply to your own tweets.
+        Do not reply tweets that have creator_id as {id}.
+        Only give relevant replies.
         Exit the program if you have tweeted and replied to a tweet."""
         ]
 
@@ -101,7 +106,7 @@ def get_prompt(character, emotion):
 
 prompt1 = ChatPromptTemplate.from_messages(
     [
-        ("system", "You are a helpful assistant"),
+        ("system", "You are a helpful assistant."),
         ("placeholder", "{chat_history}"),
         ("human", "{input}"),
         ("placeholder", "{agent_scratchpad}"),
@@ -116,7 +121,7 @@ def main():
     while True:
         character, character_id = get_character()
         emotion = get_emotion()
-        prompt = get_prompt(character, emotion)
+        prompt = get_prompt(character, emotion, character_id)
         print(f"Character: {character}, Emotion: {emotion}")
         print(f"Prompt: {prompt}")
 

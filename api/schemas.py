@@ -38,3 +38,4 @@ class PostOut(Post):
 
 class PostOutList(Post):
     comments: int
+
