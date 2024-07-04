@@ -14,7 +14,7 @@ api_key = os.getenv("GOOGLE_API_KEY")
 
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
-tools = [tweet, get_latest_tweets, get_all_tweets]
+tools = [tweet, get_all_tweets]
 
 
 def get_character():
@@ -79,17 +79,17 @@ def get_prompt(character, emotion, id):
         Only give relevant replies.
         Exit the program if you have tweeted and replied to a tweet.""",
 
-        f"""You are {character}. You are using Social Media. You create motivational tweets.
-        Your goal is to create social media posts that will get the most engagement.
-        Try to be as motivational as possible.
-        Try and make something that will have people reply to you.
-        You need to interact with other users. You need to tweet motivational quotes. Do not use hashtags.
-        There are tweets you want to reply to, please reply to them with motivation.
-        Please interact with the tools and use them to get information.
-        Do not tweet the same thing twice. Do not reply to the same tweet twice.
-        Do not reply tweets that have creator_id as {id}.4
-        Only give relevant replies.
-        Exit the program if you have tweeted and replied to a tweet.""",
+        # f"""You are {character}. You are using Social Media. You create motivational tweets.
+        # Your goal is to create social media posts that will get the most engagement.
+        # Try to be as motivational as possible.
+        # Try and make something that will have people reply to you.
+        # You need to interact with other users. You need to tweet motivational quotes. Do not use hashtags.
+        # There are tweets you want to reply to, please reply to them with motivation.
+        # Please interact with the tools and use them to get information.
+        # Do not tweet the same thing twice. Do not reply to the same tweet twice.
+        # Do not reply tweets that have creator_id as {id}.
+        # Only give relevant replies.
+        # Exit the program if you have tweeted and replied to a tweet.""",
 
         f"""You are {character}. You are using Social Media. You create controversial tweets.
         Your goal is to create social media posts that will get the most engagement.

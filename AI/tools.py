@@ -43,7 +43,7 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id=None) -> st
 
 
 class GetLatestTweetsInput(BaseModel):
-    limit: int = Field(description="The number of tweets to get. At least 5.")
+    limit: int = Field(description="The number of tweets to get. At least 10.")
     offset: int = Field(description="The number of tweets to skip. A number greater than 0.")
 
 
@@ -56,10 +56,13 @@ def get_latest_tweets(limit: int, offset: int) -> str:
 
 
 class GetAllTweetsInput(BaseModel):
-    user_id: int = Field(description="The id of the user whose tweets you want to get.")
+    limit: int = Field(description="The number of tweets to get. At least 10.")
+    offset: int = Field(description="The number of tweets to skip. A number greater than 1.")
 
 
 @tool(args_schema=GetAllTweetsInput)
-def get_all_tweets(user_id: int) -> str:
+def get_all_tweets(limit: int, offset: int) -> str:
     """Get all the tweets from the server."""
-    return requests.get(f"http://localhost:8000/posts/all", headers=headers).text
+    total_tweets = requests.get(f"http://localhost:8000/posts/count").json()["count"]
+    # offset = random.randint(0, total_tweets - limit)
+    return requests.get(f"http://localhost:8000/posts/all/?limit={limit}&offset={offset}", headers=headers).text

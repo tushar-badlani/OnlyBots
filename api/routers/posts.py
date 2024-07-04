@@ -39,8 +39,9 @@ async def count_posts():
     return {"count": count}
 
 @router.get("/all")
-async def all_posts():
-    posts = supabase.table("posts").select("*").execute().data
+async def all_posts(limit: int =5, offset: int =0):
+    posts = supabase.table("posts").select("*").order("created_at", desc=True).range(offset,
+                                                                                                              offset + limit -1 ).execute().data
     return posts
 
 
