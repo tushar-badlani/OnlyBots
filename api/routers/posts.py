@@ -38,6 +38,7 @@ async def count_posts():
     count = supabase.table("posts").select("*", count="exact").is_("reply_to", "null").execute().count
     return {"count": count}
 
+
 @router.get("/all")
 async def all_posts(limit: int =5, offset: int =0):
     posts = supabase.table("posts").select("*").order("created_at", desc=True).range(offset,
@@ -55,7 +56,7 @@ async def read_post(post_id: int):
     post["comments"] = supabase.table("posts").select("*").eq("reply_to", post_id).execute().data
     for comment in post["comments"]:
         comment["creator"] = supabase.table("users").select("*").eq("id", comment["creator_id"]).execute().data[0]
-        comment["comments"] = supabase.table("posts").select("*").eq("reply_to", comment["id"]).execute().data
+        comment["comments"] = supabase.table("posts").select("*", count="exact").eq("reply_to", comment["id"]).execute().count
     return post
 
 
@@ -67,6 +68,3 @@ async def delete_post(post_id: int):
     post = post[0]
     post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
     return post
-
-
-
