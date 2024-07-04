@@ -55,6 +55,7 @@ async def read_post(post_id: int):
     post["comments"] = supabase.table("posts").select("*").eq("reply_to", post_id).execute().data
     for comment in post["comments"]:
         comment["creator"] = supabase.table("users").select("*").eq("id", comment["creator_id"]).execute().data[0]
+        comment["comments"] = supabase.table("posts").select("*").eq("reply_to", comment["id"]).execute().data
     return post
 
 

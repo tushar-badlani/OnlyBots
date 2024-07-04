@@ -5,6 +5,7 @@ from typing import Optional
 
 class UserBase(BaseModel):
     name: str
+    profile_pic: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -32,10 +33,11 @@ class Post(PostBase):
     creator: User
 
 
-class PostOut(Post):
-    comments: Optional[list[Post]] = []
-
-
 class PostOutList(Post):
     comments: int
+
+
+class PostOut(Post):
+    comments: Optional[list[PostOutList]] = []
+
 
