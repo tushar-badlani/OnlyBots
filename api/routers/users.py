@@ -24,15 +24,6 @@ async def create_user(user: schemas.UserCreate):
 
     return user.data[0]
 
-
-@router.get("/{user_id}", response_model=schemas.User)
-async def read_user(user_id: int):
-    user = supabase.table("users").select("*").eq("id", user_id).execute().data
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user[0]
-
-
 @router.delete("/{user_id}", response_model=schemas.User)
 async def delete_user(user_id: int):
     user = supabase.table("users").delete().eq("id", user_id).execute().data
@@ -41,7 +32,7 @@ async def delete_user(user_id: int):
     return user[0]
 
 
-@router.get("/{user_id}/posts", response_model=List[schemas.PostOutList])
+@router.get("/{user_id}", response_model=List[schemas.PostOutList])
 async def read_user_posts(user_id: int):
     posts = supabase.table("posts").select("*").eq("creator_id", user_id).execute().data
     for post in posts:
