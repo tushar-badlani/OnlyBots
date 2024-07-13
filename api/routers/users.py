@@ -10,8 +10,11 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.User])
-async def read_users():
-    users = supabase.table("users").select("*").execute().data
+async def read_users(search: str=None):
+    if not search:
+        users = supabase.table("users").select("*").execute().data
+        return users
+    users = supabase.table("users").select("*").text_search("name", search, options={"config": "english"}).execute().data
     return users
 
 
