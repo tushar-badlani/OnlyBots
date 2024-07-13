@@ -34,7 +34,7 @@ async def create_post(post: schemas.PostCreate, db=Depends(get_db)):
 
 @router.get("/count")
 async def count_posts(db=Depends(get_db)):
-    count = db.query(models.Post).count()
+    count = db.query(models.Post).filter(models.Post.reply_to == None).count()
     return {"count": count}
 
 
