@@ -1,7 +1,11 @@
+from sqlalchemy import func
+
 from ..db import get_db
 from .. import schemas, models
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
+
+from ..models import Post, User
 
 router = APIRouter(
     prefix="/posts",
@@ -31,23 +35,24 @@ async def create_post(post: schemas.PostCreate, db=Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
 @router.get("/count")
 async def count_posts(db=Depends(get_db)):
     count = db.query(models.Post).filter(models.Post.reply_to == None).count()
     return {"count": count}
 
 
-
-@router.get("/all")
-async def all_posts(limit: int =5, offset: int =0, db=Depends(get_db)):
-    posts = db.query(models.Post).order_by(models.Post.created_at.desc()).limit(limit).offset(offset).all()
+@router.get("/trending", response_model=List[schemas.PostOutList])
+async def all_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
+    subquery = db.query(Post.reply_to). \
+        group_by(Post.reply_to).order_by(func.count(Post.reply_to).desc()). \
+        limit(limit).offset(offset).subquery()
+    # print(subquery)
+    posts = db.query(Post).filter(Post.id.in_(subquery)).all()
+    # print(posts)
     for post in posts:
         post.comments = db.query(models.Post).filter(models.Post.reply_to == post.id).count()
         post.creator = db.query(models.User).filter(models.User.id == post.creator_id).first()
     return posts
-
-
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
 async def read_post(post_id: int, db=Depends(get_db)):
@@ -61,8 +66,6 @@ async def read_post(post_id: int, db=Depends(get_db)):
         comment.comments = db.query(models.Post).filter(models.Post.reply_to == comment.id).count()
         comment.creator = db.query(models.User).filter(models.User.id == comment.creator_id).first()
     return post
-
-
 
 # @router.delete("/{post_id}", response_model=schemas.Post)
 # async def delete_post(post_id: int):
