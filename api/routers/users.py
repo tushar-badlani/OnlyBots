@@ -42,7 +42,7 @@ async def read_user_posts(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    posts = db.query(models.Post).filter(models.Post.creator_id == user_id).all()
+    posts = db.query(models.Post).filter(models.Post.creator_id == user_id).order_by(models.Post.created_at.desc()).all()
     for post in posts:
         post.comments = db.query(models.Post).filter(models.Post.reply_to == post.id).count()
         post.creator = user
