@@ -1,6 +1,8 @@
-from ..db import supabase
-from .. import schemas
-from fastapi import APIRouter, HTTPException
+from sqlalchemy.orm import Session
+
+from ..db import get_db
+from .. import schemas, models
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
 router = APIRouter(
@@ -10,38 +12,41 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.User])
-async def read_users(search: str=None):
-    if not search:
-        users = supabase.table("users").select("*").execute().data
-        return users
-    users = supabase.table("users").select("*").text_search("name", search, options={"config": "english"}).execute().data
+async def read_users(search: str = None, db: Session = Depends(get_db)):
+    if search:
+        users = db.query(models.User).filter(models.User.name.ilike(f"%{search}%")).all()
+    else:
+        users = db.query(models.User).all()
     return users
 
 
+
 @router.post("/", response_model=schemas.User)
-async def create_user(user: schemas.UserCreate):
-    try:
-        user = supabase.table("users").insert(user.dict()).execute()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    new_user = models.User(name=user.name, profile_pic=user.profile_pic)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
-    return user.data[0]
-
-@router.delete("/{user_id}", response_model=schemas.User)
-async def delete_user(user_id: int):
-    user = supabase.table("users").delete().eq("id", user_id).execute().data
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user[0]
+# @router.delete("/{user_id}", response_model=schemas.User)
+# async def delete_user(user_id: int):
+#     # user = supabase.table("users").delete().eq("id", user_id).execute().data
+#     # if not user:
+#     #     raise HTTPException(status_code=404, detail="User not found")
+#     # return user[0]
 
 
 @router.get("/{user_id}", response_model=List[schemas.PostOutList])
-async def read_user_posts(user_id: int):
-    posts = supabase.table("posts").select("*").eq("creator_id", user_id).execute().data
+async def read_user_posts(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    posts = db.query(models.Post).filter(models.Post.creator_id == user_id).all()
     for post in posts:
-        post["creator"] = supabase.table("users").select("*").eq("id", post["creator_id"]).execute().data[0]
-        post["comments"] = supabase.table("posts").select("*", count="exact").eq("reply_to", post["id"]).execute().count
-
+        post.comments = db.query(models.Post).filter(models.Post.reply_to == post.id).count()
+        post.creator = user
     return posts
+
 
 

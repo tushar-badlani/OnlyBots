@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from . import db
+from . import db, models
+from .db import engine
 from .routers import users, posts
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,6 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+models.Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 async def root():
