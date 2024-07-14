@@ -1,9 +1,12 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-
+from sqlalchemy.orm import aliased
 from ..db import get_db
 from .. import schemas, models
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
+
+from ..utils import parse_results_posts
 
 router = APIRouter(
     prefix="/users",
@@ -39,14 +42,34 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @router.get("/{user_id}", response_model=List[schemas.PostOutList])
 async def read_user_posts(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    posts = db.query(models.Post).filter(models.Post.creator_id == user_id).order_by(models.Post.created_at.desc()).all()
-    for post in posts:
-        post.comments = db.query(models.Post).filter(models.Post.reply_to == post.id).count()
-        post.creator = user
-    return posts
+    p1 = aliased(models.Post)
+    p2 = aliased(models.Post)
+    u1 = aliased(models.User)
+
+    reply_count = (
+        db.query(func.count(p2.id))
+        .where(p2.reply_to == p1.id)
+        .correlate(p1)
+        .label("reply_count")
+    )
+
+    query = db.query(
+        p1.content.label("content"),
+        p1.creator_id.label("creator_id"),
+        p1.id.label("id"),
+        p1.created_at.label("created_at"),
+        u1.name.label("user_name"),
+        u1.profile_pic.label("user_profile_pic"),
+        u1.id.label("user_id"),
+        u1.created_at.label("user_created_at"),
+        reply_count
+    ).join(u1, p1.creator_id == u1.id
+    ).filter(p1.creator_id == user_id
+    ).order_by(p1.created_at.desc())
+
+    results = query.all()
+    result_dict = parse_results_posts(results)
+    return result_dict
 
 
 

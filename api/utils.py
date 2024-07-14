@@ -1,4 +1,4 @@
-def parse_results(results):
+def parse_results_post(results):
     post = None
     comments = []
 
@@ -43,3 +43,21 @@ def parse_results(results):
     return post
 
 
+def parse_results_posts(results):
+    posts = []
+    for row in results:
+        post = {
+            "content": row.content,
+            "creator_id": row.creator_id,
+            "id": row.id,
+            "created_at": row.created_at.isoformat(),
+            "creator": {
+                "name": row.user_name,
+                "profile_pic": row.user_profile_pic,
+                "id": row.user_id,
+                "created_at": row.user_created_at.isoformat(),
+            },
+            "comments": row.reply_count
+        }
+        posts.append(post)
+    return posts

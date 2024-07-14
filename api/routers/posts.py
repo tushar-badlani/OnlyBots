@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
 from ..models import Post, User
-from ..utils import parse_results
+from ..utils import parse_results_post, parse_results_posts
 
 router = APIRouter(
     prefix="/posts",
@@ -17,11 +17,38 @@ router = APIRouter(
 
 @router.get("/", response_model=List[schemas.PostOutList])
 async def read_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
-    posts = db.query(models.Post).order_by(models.Post.created_at.desc()).filter(models.Post.reply_to == None).limit(limit).offset(offset).all()
-    for post in posts:
-        post.comments = db.query(models.Post).filter(models.Post.reply_to == post.id).count()
-        post.creator = db.query(models.User).filter(models.User.id == post.creator_id).first()
-    return posts
+    p1 = aliased(Post)
+    p2 = aliased(Post)
+    u1 = aliased(User)
+
+    reply_count = (
+        db.query(func.count(p2.id))
+        .where(p2.reply_to == p1.id)
+        .correlate(p1)
+        .label("reply_count")
+    )
+
+    query = db.query(
+        p1.content.label("content"),
+        p1.creator_id.label("creator_id"),
+        p1.id.label("id"),
+        p1.created_at.label("created_at"),
+        u1.name.label("user_name"),
+        u1.profile_pic.label("user_profile_pic"),
+        u1.id.label("user_id"),
+        u1.created_at.label("user_created_at"),
+        reply_count
+    ).join(u1, p1.creator_id == u1.id
+    ).order_by(p1.created_at.desc()
+    ).limit(limit
+    ).offset(offset)
+
+    results = query.all()
+    result_dict = parse_results_posts(results)
+    return result_dict
+
+
+
 
 
 @router.post("/")
@@ -44,17 +71,36 @@ async def count_posts(db=Depends(get_db)):
 
 
 @router.get("/trending", response_model=List[schemas.PostOutList])
-async def all_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
-    subquery = db.query(Post.reply_to). \
-        group_by(Post.reply_to).order_by(func.count(Post.reply_to).desc()). \
-        limit(limit).offset(offset).subquery()
-    # print(subquery)
-    posts = db.query(Post).filter(Post.id.in_(subquery)).all()
-    # print(posts)
-    for post in posts:
-        post.comments = db.query(models.Post).filter(models.Post.reply_to == post.id).count()
-        post.creator = db.query(models.User).filter(models.User.id == post.creator_id).first()
-    return posts
+async def trending_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
+    p1 = aliased(Post)
+    p2 = aliased(Post)
+    u1 = aliased(User)
+
+    reply_count = (
+        db.query(func.count(p2.id))
+        .where(p2.reply_to == p1.id)
+        .correlate(p1)
+        .label("reply_count")
+    )
+
+    query = db.query(
+        p1.content.label("content"),
+        p1.creator_id.label("creator_id"),
+        p1.id.label("id"),
+        p1.created_at.label("created_at"),
+        u1.name.label("user_name"),
+        u1.profile_pic.label("user_profile_pic"),
+        u1.id.label("user_id"),
+        u1.created_at.label("user_created_at"),
+        reply_count
+    ).join(u1, p1.creator_id == u1.id
+    ).order_by(reply_count.desc()
+    ).limit(limit
+    ).offset(offset)
+
+    results = query.all()
+    result_dict = parse_results_posts(results)
+    return result_dict
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
 async def read_post(post_id: int, db=Depends(get_db)):
@@ -98,7 +144,7 @@ async def read_post(post_id: int, db=Depends(get_db)):
     ).filter(p1.id == post_id)
 
     results = query.all()
-    result_dict = parse_results(results)
+    result_dict = parse_results_post(results)
 
     return result_dict
 # @router.delete("/{post_id}", response_model=schemas.Post)
