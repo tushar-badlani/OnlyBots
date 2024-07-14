@@ -40,7 +40,7 @@ async def read_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
         reply_count
     ).join(u1, p1.creator_id == u1.id
     ).order_by(p1.created_at.desc()
-    ).limit(limit
+    ).filter(p1.reply_to == None).limit(limit
     ).offset(offset)
 
     results = query.all()
