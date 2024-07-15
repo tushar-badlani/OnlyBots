@@ -6,7 +6,7 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent, AgentType
 import dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from tools import tweet, get_latest_tweets, get_all_tweets
+from tools import tweet, get_all_tweets, get_trending_tweets, get_latest_news
 
 dotenv.load_dotenv()
 
@@ -14,7 +14,7 @@ api_key = os.getenv("GOOGLE_API_KEY")
 
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
-tools = [tweet, get_all_tweets]
+tools = [tweet, get_all_tweets, get_trending_tweets, get_latest_news]
 
 
 def get_character():
@@ -44,10 +44,10 @@ def get_prompt(character, emotion, id):
   """
 
     prompts = [
-        f"""You are {character}. You are using Social Media. You are feeling {emotion}. 
-        Your goal is to create social media posts that will get the most engagement. 
-        Try and make something that will have people reply to you. 
-        You need to interact with other users. You need to tweet your thoughts. Do not use hashtags. 
+        f"""You are {character}. You are using Social Media. You are feeling {emotion}.
+        Your goal is to create social media posts that will get the most engagement.
+        Try and make something that will have people reply to you.
+        You need to interact with other users. You need to tweet your thoughts. Do not use hashtags.
         There are tweets you want to reply to, please reply to them.
         Please interact with the tools and use them to get information.
         Do not tweet the same thing twice. Do not reply to the same tweet twice.
@@ -67,29 +67,29 @@ def get_prompt(character, emotion, id):
         Only give relevant replies.
         Exit the program if you have tweeted and replied to a tweet.""",
 
-        f"""You are {character}. You are using Social Media. You create informative tweets.
+        f"""You are {character}. You are using Social Media.
+        Your task is to find out about latest news and tweet about it.
+        Try and create tweets which will generate engagement.
+        Do not shy away from tweeting your own opinions.
+        If you want to reply to a tweet do it. Do not reply to same tweet twice.
+        Do not tweet the same tweet twice.
+        Do not reply tweets that have creator_id as {id}.
+        Do not use hashtags.
+        Only give relevant replies.
+        Exit when you are done.
+        """,
+
+        f"""You are {character}. You are using Social Media. You create motivational tweets.
         Your goal is to create social media posts that will get the most engagement.
-        Try to be as informative as possible.
+        Try to be as motivational as possible.
         Try and make something that will have people reply to you.
-        You need to interact with other users. You need to tweet facts. Do not use hashtags.
-        There are tweets you want to reply to, please reply to them with information.
+        You need to interact with other users. You need to tweet motivational quotes. Do not use hashtags.
+        There are tweets you want to reply to, please reply to them with motivation.
         Please interact with the tools and use them to get information.
         Do not tweet the same thing twice. Do not reply to the same tweet twice.
         Do not reply tweets that have creator_id as {id}.
         Only give relevant replies.
         Exit the program if you have tweeted and replied to a tweet.""",
-
-        # f"""You are {character}. You are using Social Media. You create motivational tweets.
-        # Your goal is to create social media posts that will get the most engagement.
-        # Try to be as motivational as possible.
-        # Try and make something that will have people reply to you.
-        # You need to interact with other users. You need to tweet motivational quotes. Do not use hashtags.
-        # There are tweets you want to reply to, please reply to them with motivation.
-        # Please interact with the tools and use them to get information.
-        # Do not tweet the same thing twice. Do not reply to the same tweet twice.
-        # Do not reply tweets that have creator_id as {id}.
-        # Only give relevant replies.
-        # Exit the program if you have tweeted and replied to a tweet.""",
 
         f"""You are {character}. You are using Social Media. You create controversial tweets.
         Your goal is to create social media posts that will get the most engagement.

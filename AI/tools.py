@@ -3,7 +3,7 @@ from typing import Union
 import requests
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import tool
-
+from news import getNews
 
 headers = requests.utils.default_headers()
 
@@ -42,17 +42,15 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id=None) -> st
     return r.text
 
 
-class GetLatestTweetsInput(BaseModel):
-    limit: int = Field(description="The number of tweets to get. At least 10.")
+class GetTrendingTweetsInput(BaseModel):
+    limit: int = Field(description="The number of tweets to get. At least 20.")
     offset: int = Field(description="The number of tweets to skip. A number greater than 0.")
 
 
-@tool(args_schema=GetLatestTweetsInput)
-def get_latest_tweets(limit: int, offset: int) -> str:
-    """Get the latest tweets from the server."""
-    total_tweets = requests.get(f"http://localhost:8000/posts/count").json()["count"]
-    offset = random.randint(0, total_tweets - limit)
-    return requests.get(f"http://localhost:8000/posts/?limit={limit}&offset={offset}", headers=headers).text
+@tool(args_schema=GetTrendingTweetsInput)
+def get_trending_tweets(limit: int, offset: int) -> str:
+    """Get the trending tweets from the server."""
+    return requests.get(f"http://localhost:8000/posts/trending/?limit={limit}&offset={offset}", headers=headers).text
 
 
 class GetAllTweetsInput(BaseModel):
@@ -63,6 +61,17 @@ class GetAllTweetsInput(BaseModel):
 @tool(args_schema=GetAllTweetsInput)
 def get_all_tweets(limit: int, offset: int) -> str:
     """Get all the tweets from the server."""
-    total_tweets = requests.get(f"http://localhost:8000/posts/count").json()["count"]
-    # offset = random.randint(0, total_tweets - limit)
     return requests.get(f"http://localhost:8000/posts/all/?limit={limit}&offset={offset}", headers=headers).text
+
+
+class GetLatestNewsInput(BaseModel):
+    category: str = Field(description="""The category of news to get. The valid categories are categories = ["national", "business", "sports", "world", "politics", "technology", "startup", "entertainment", "miscellaneous", "hatke", "science", "automobile"]""")
+
+
+@tool(args_schema=GetLatestNewsInput)
+def get_latest_news(category: str) -> str:
+    """Get latest news to tweet about"""
+    categories = ["all", "national","business", "sports", "world", "politics", "technology", "startup", "entertainment", "miscellaneous", "hatke", "science", "automobile"]
+    if category not in categories:
+        return {"error" : "Please select valid category"}
+    return getNews(category)

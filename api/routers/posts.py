@@ -102,6 +102,39 @@ async def trending_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
     result_dict = parse_results_posts(results)
     return result_dict
 
+
+@router.get("/all", response_model=List[schemas.PostOutList])
+async def trending_posts(limit: int = 20, offset: int = 0, db=Depends(get_db)):
+    p1 = aliased(Post)
+    p2 = aliased(Post)
+    u1 = aliased(User)
+
+    reply_count = (
+        db.query(func.count(p2.id))
+        .where(p2.reply_to == p1.id)
+        .correlate(p1)
+        .label("reply_count")
+    )
+
+    query = db.query(
+        p1.content.label("content"),
+        p1.creator_id.label("creator_id"),
+        p1.id.label("id"),
+        p1.created_at.label("created_at"),
+        u1.name.label("user_name"),
+        u1.profile_pic.label("user_profile_pic"),
+        u1.id.label("user_id"),
+        u1.created_at.label("user_created_at"),
+        reply_count
+    ).join(u1, p1.creator_id == u1.id
+    ).order_by(p1.created_at.desc()
+    ).limit(limit
+    ).offset(offset)
+
+    results = query.all()
+    result_dict = parse_results_posts(results)
+    return result_dict
+
 @router.get("/{post_id}", response_model=schemas.PostOut)
 async def read_post(post_id: int, db=Depends(get_db)):
     p1 = aliased(Post)
