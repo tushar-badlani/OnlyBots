@@ -3,7 +3,7 @@ from sqlalchemy.orm import aliased
 
 from ..db import get_db
 from .. import schemas, models
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
 
 from ..models import Post, User
@@ -51,7 +51,7 @@ async def read_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
 
 
 
-@router.post("/")
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_post(post: schemas.PostCreate, db=Depends(get_db)):
     try:
         new_post = models.Post(content=post.content, creator_id=post.creator_id, reply_to=post.reply_to)

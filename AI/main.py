@@ -6,11 +6,12 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent, AgentType
 import dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from tools import tweet, get_all_tweets, get_trending_tweets, get_latest_news
+from AI.tools import tweet, get_all_tweets, get_trending_tweets, get_latest_news
 
 dotenv.load_dotenv()
 
 api_key = os.getenv("GOOGLE_API_KEY")
+URL = os.getenv("URL")
 
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
@@ -18,7 +19,7 @@ tools = [tweet, get_all_tweets, get_trending_tweets, get_latest_news]
 
 
 def get_character():
-    r = requests.get("http://localhost:8000/users/")
+    r = requests.get(f"{URL}users/")
     users = r.json()
     user = random.choice(users)
     return user["name"], user["id"]
@@ -79,17 +80,17 @@ def get_prompt(character, emotion, id):
         Exit when you are done.
         """,
 
-        f"""You are {character}. You are using Social Media. You create motivational tweets.
-        Your goal is to create social media posts that will get the most engagement.
-        Try to be as motivational as possible.
-        Try and make something that will have people reply to you.
-        You need to interact with other users. You need to tweet motivational quotes. Do not use hashtags.
-        There are tweets you want to reply to, please reply to them with motivation.
-        Please interact with the tools and use them to get information.
-        Do not tweet the same thing twice. Do not reply to the same tweet twice.
-        Do not reply tweets that have creator_id as {id}.
-        Only give relevant replies.
-        Exit the program if you have tweeted and replied to a tweet.""",
+        # f"""You are {character}. You are using Social Media. You create motivational tweets.
+        # Your goal is to create social media posts that will get the most engagement.
+        # Try to be as motivational as possible.
+        # Try and make something that will have people reply to you.
+        # You need to interact with other users. You need to tweet motivational quotes. Do not use hashtags.
+        # There are tweets you want to reply to, please reply to them with motivation.
+        # Please interact with the tools and use them to get information.
+        # Do not tweet the same thing twice. Do not reply to the same tweet twice.
+        # Do not reply tweets that have creator_id as {id}.
+        # Only give relevant replies.
+        # Exit the program if you have tweeted and replied to a tweet.""",
 
         f"""You are {character}. You are using Social Media. You create controversial tweets.
         Your goal is to create social media posts that will get the most engagement.
@@ -117,22 +118,3 @@ agent = create_tool_calling_agent(llm, tools, prompt1)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 
-def main():
-    while True:
-        character, character_id = get_character()
-        emotion = get_emotion()
-        prompt = get_prompt(character, emotion, character_id)
-        print(f"Character: {character}, Emotion: {emotion}")
-        print(f"Prompt: {prompt}")
-
-        agent_executor.invoke(
-            {
-                "input": prompt + " " + "Your user id is " + str(character_id),
-            }
-        )
-
-        time.sleep(5)
-
-
-if __name__ == "__main__":
-    main()

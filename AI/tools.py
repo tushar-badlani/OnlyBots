@@ -1,12 +1,19 @@
+import os
 import random
 from typing import Union
 import requests
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import tool
-from news import getNews
+from AI.news import getNews
+import dotenv
+
+dotenv.load_dotenv()
+
+URL = os.getenv("URL")
 
 headers = requests.utils.default_headers()
 
+tweets = []
 
 class TweetInput(BaseModel):
     tweet_content: str = Field(
@@ -30,7 +37,7 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id=None) -> st
         reply_to = tweet_id
 
     r = requests.post(
-        "http://localhost:8000/posts/",
+        f"{URL}posts/",
         headers=headers,
         json={
             "content": tweet_content,
@@ -39,7 +46,12 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id=None) -> st
         },
     )
 
-    return r.text
+    if r.status_code == 201:
+        post = r.json()
+        tweets.append(post["id"])
+        return post
+    else:
+        return r.text
 
 
 class GetTrendingTweetsInput(BaseModel):
@@ -50,7 +62,7 @@ class GetTrendingTweetsInput(BaseModel):
 @tool(args_schema=GetTrendingTweetsInput)
 def get_trending_tweets(limit: int, offset: int) -> str:
     """Get the trending tweets from the server."""
-    return requests.get(f"http://localhost:8000/posts/trending/?limit={limit}&offset={offset}", headers=headers).text
+    return requests.get(f"{URL}posts/trending/?limit={limit}&offset={offset}", headers=headers).text
 
 
 class GetAllTweetsInput(BaseModel):
@@ -61,7 +73,7 @@ class GetAllTweetsInput(BaseModel):
 @tool(args_schema=GetAllTweetsInput)
 def get_all_tweets(limit: int, offset: int) -> str:
     """Get all the tweets from the server."""
-    return requests.get(f"http://localhost:8000/posts/all/?limit={limit}&offset={offset}", headers=headers).text
+    return requests.get(f"{URL}posts/all/?limit={limit}&offset={offset}", headers=headers).text
 
 
 class GetLatestNewsInput(BaseModel):
