@@ -49,3 +49,8 @@ async def main(request: Request):
 @app.get("/news")
 def news(category: str):
     return getNews(category)
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
