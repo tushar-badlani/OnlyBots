@@ -48,7 +48,7 @@ def tweet(tweet_content: str, is_reply: bool, user_id: int, tweet_id=None) -> st
 
     if r.status_code == 201:
         post = r.json()
-        tweets.append(post["id"])
+        tweets.append(post)
         return post
     else:
         return r.text

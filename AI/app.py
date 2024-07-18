@@ -1,6 +1,10 @@
 from datetime import time
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
 
 from AI.main import get_character, get_emotion, get_prompt, agent_executor
 from fastapi import FastAPI
@@ -18,10 +22,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+limiter = Limiter(key_func= get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.get("/start")
-def main():
+@limiter.limit("1/minute")
+async def main(request: Request):
     tweets.clear()
     character, character_id = get_character()
     emotion = get_emotion()

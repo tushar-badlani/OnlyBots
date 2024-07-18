@@ -51,13 +51,14 @@ async def read_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
 
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
 async def create_post(post: schemas.PostCreate, db=Depends(get_db)):
     try:
         new_post = models.Post(content=post.content, creator_id=post.creator_id, reply_to=post.reply_to)
         db.add(new_post)
         db.commit()
         db.refresh(new_post)
+        new_post.creator = db.query(models.User).filter(models.User.id == new_post.creator_id).first()
         return new_post
 
     except Exception as e:
