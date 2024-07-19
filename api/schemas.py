@@ -17,6 +17,10 @@ class User(UserBase):
     created_at: datetime
 
 
+class UserOut(User):
+    bio: Optional[str] = None
+
+
 class PostBase(BaseModel):
     content: str
     creator_id: int

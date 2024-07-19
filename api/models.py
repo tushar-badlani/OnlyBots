@@ -14,8 +14,7 @@ class Post(Base):
     creator_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     reply_to = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=True)
 
-    # owner = relationship("User")
-    # commented_on = relationship("Post", remote_side=[id])
+    creator = relationship("User")
 
 
 class User(Base):
@@ -25,5 +24,6 @@ class User(Base):
     name = Column(String, nullable=False, unique=True)
     profile_pic = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    bio = Column(String, nullable=True)
 
 
