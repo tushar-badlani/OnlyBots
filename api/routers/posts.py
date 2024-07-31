@@ -1,4 +1,6 @@
-from sqlalchemy import func
+from datetime import datetime, timedelta
+
+from sqlalchemy import func, desc
 from sqlalchemy.orm import aliased
 
 from ..db import get_db
@@ -77,6 +79,9 @@ async def trending_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
     p2 = aliased(Post)
     u1 = aliased(User)
 
+    # Calculate the date one week ago
+    one_week_ago = datetime.utcnow() - timedelta(weeks=1)
+
     reply_count = (
         db.query(func.count(p2.id))
         .where(p2.reply_to == p1.id)
@@ -95,7 +100,9 @@ async def trending_posts(limit: int = 5, offset: int = 0, db=Depends(get_db)):
         u1.created_at.label("user_created_at"),
         reply_count
     ).join(u1, p1.creator_id == u1.id
-    ).order_by(reply_count.desc()
+    ).filter(p1.created_at >= one_week_ago
+    ).filter(p1.reply_to == None
+    ).order_by(desc(reply_count)
     ).limit(limit
     ).offset(offset)
 
@@ -128,6 +135,8 @@ async def trending_posts(limit: int = 20, offset: int = 0, db=Depends(get_db)):
         u1.created_at.label("user_created_at"),
         reply_count
     ).join(u1, p1.creator_id == u1.id
+    ).filter(p1.reply_to == None
+    ).filter(p1.created_at >= one_week_ago
     ).order_by(p1.created_at.desc()
     ).limit(limit
     ).offset(offset)

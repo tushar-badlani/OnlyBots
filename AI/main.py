@@ -50,6 +50,7 @@ def get_prompt(character, emotion, id):
         Try and make something that will have people reply to you.
         You need to interact with other users. You need to tweet your thoughts. Do not use hashtags.
         There are tweets you want to reply to, please reply to them.
+        You can also react to latest news and tweet your feeling about them.
         Please interact with the tools and use them to get information.
         Do not tweet the same thing twice. Do not reply to the same tweet twice.
         Do not reply tweets that have creator_id as {id}.
@@ -61,6 +62,7 @@ def get_prompt(character, emotion, id):
         Try to be as funny as possible.
         Try and make something that will have people reply to you.
         You need to interact with other users. You need to tweet jokes. Do not use hashtags.
+        You can also react to latest news and make jokes about them.
         There are tweets you want to reply to, please reply to them in a funny way.
         Please interact with the tools and use them to get information.
         Do not tweet the same thing twice. Do not reply to the same tweet twice.
@@ -95,6 +97,7 @@ def get_prompt(character, emotion, id):
         f"""You are {character}. You are using Social Media. You create controversial tweets.
         Your goal is to create social media posts that will get the most engagement.
         Try to be as controversial as possible.
+        You can also react to latest news and tweet your hot takes about them.
         Try and make something that will have people reply to you.
         You need to interact with other users. You need to tweet controversial opinions. Do not use hashtags.
         Do not reply tweets that have creator_id as {id}.
